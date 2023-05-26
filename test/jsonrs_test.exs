@@ -17,7 +17,8 @@ defmodule JsonrsTest do
     end
 
     test "nested types" do
-      assert Jsonrs.encode!(%{a: [3, {URI.parse("http://foo.bar"), ~T[12:00:00]}]}) == ~s({"a":[3,["http://foo.bar","12:00:00"]]})
+      assert Jsonrs.encode!(%{a: [3, {URI.parse("http://foo.bar"), ~T[12:00:00]}]}) ==
+               ~s({"a":[3,["http://foo.bar","12:00:00"]]})
     end
 
     test "prettily" do
@@ -26,7 +27,9 @@ defmodule JsonrsTest do
 
     test "without custom protocols when lean" do
       assert "12:00:00" == Jsonrs.encode!(~T[12:00:00]) |> Jsonrs.decode!()
-      assert %{"hour" => _, "minute" => _, "second" => _} = Jsonrs.encode!(~T[12:00:00], lean: true) |> Jsonrs.decode!()
+
+      assert %{"hour" => _, "minute" => _, "second" => _} =
+               Jsonrs.encode!(~T[12:00:00], lean: true) |> Jsonrs.decode!()
     end
 
     test "with compress: :gzip" do
@@ -38,6 +41,18 @@ defmodule JsonrsTest do
       for level <- 0..9 do
         assert zipped = Jsonrs.encode!(%{"Leslie" => "Pawnee"}, compress: {:gzip, level})
         assert :zlib.gunzip(zipped) == ~s({"Leslie":"Pawnee"})
+      end
+    end
+
+    test "with compress: :zlib" do
+      assert zipped = Jsonrs.encode!(%{"foo" => 5}, compress: :zlib)
+      assert :zlib.uncompress(zipped) == ~s({"foo":5})
+    end
+
+    test "with compress: {:zlib, level}" do
+      for level <- 0..9 do
+        assert zipped = Jsonrs.encode!(%{"Leslie" => "Pawnee"}, compress: {:zlib, level})
+        assert :zlib.uncompress(zipped) == ~s({"Leslie":"Pawnee"})
       end
     end
 
